@@ -1,0 +1,318 @@
+# Project Prompt: Django GIS Data Explorer (SQLite Database)
+
+Build a complete Django GIS Data Explorer application using a SQLite database.
+
+The application must allow administrators to dynamically register, import, configure, visualize, search, cluster, and report on multiple datasets containing latitude and longitude information.
+
+The application must be enterprise-grade, metadata-driven, highly configurable, scalable, and require zero code changes whenever new datasets are introduced.
+
+## Primary Business Objective
+
+Analyze multiple datasets containing latitude and longitude information, dynamically configure those datasets, identify unique non-overlapping clusters within an administrator-defined radius (default 4 KM), and generate reports that help identify high-density locations suitable for future network expansion.
+
+## Admin Module
+
+Create an Admin Configuration panel.
+
+This panel controls what appears on the frontend.
+
+Administrator should be able to register any database table.
+
+**IMPORTANT: Every configuration created from the Admin UI must be stored inside the application's own configuration tables.**
+
+Nothing should be hardcoded inside Django models or Python files.
+
+The application should be completely metadata-driven.
+
+Whenever an administrator adds or modifies a source, filter, icon, column mapping, cluster settings, or frontend visibility, it must be saved in the configuration database and reflected immediately without code changes or server restart.
+
+For every table administrator can configure:
+
+- Source Name
+- Actual Database Table
+- Display Name
+- Latitude Column
+- Longitude Column
+- Tooltip Columns
+- Popup Columns
+- Filter Columns
+- Icon Type
+- Marker Color
+- Default visibility
+- Sort Order
+- Enable/Disable on Frontend
+- Enable/Disable in Backend
+- Cluster Eligible
+- Default Cluster Radius
+- Source Description
+- Source Category
+- Created By
+- Created Date
+- Last Modified Date
+
+Administrator should be able to disable a source completely.
+
+If Backend is disabled:
+
+- APIs must ignore the source.
+- Reports must ignore the source.
+- Radius search must ignore the source.
+
+If Frontend is disabled:
+
+- Source should not appear in filters.
+- Source markers should never load.
+- Existing configuration should remain in database.
+
+## Radius Search
+
+Very important feature.
+
+Administrator selects which sources support radius.
+
+Cluster Radius should NOT be hardcoded.
+
+Administrator defines the default cluster radius from Admin.
+
+Example:
+
+- 4 KM
+- 6 KM
+- 10 KM
+
+Default value should be configurable.
+
+The business use-case is identifying expansion opportunities by locating dense clusters.
+
+### STRICT BUSINESS RULE
+
+Cluster overlapping is NOT allowed.
+
+When cluster generation runs:
+
+- Every point can belong to only one cluster.
+- No overlapping circles.
+- No duplicate project assignment.
+- Once a location becomes part of one cluster it cannot belong to another cluster.
+- System should always generate maximum unique clusters.
+- Cluster generation algorithm should guarantee non-overlapping clusters.
+
+This rule is mandatory.
+
+## Statistics Panel
+
+Display:
+
+- Total Sources
+- Visible Sources
+- Visible Markers
+- Selected Source Count
+- Markers Inside Radius
+- Total Clusters
+- Clustered Projects
+- Non Clustered Projects
+- Largest Cluster
+- Average Cluster Size
+
+Updates dynamically.
+
+## Admin Dashboard
+
+Administrator can:
+
+- Add Source
+- Edit Source
+- Delete Source
+- Enable Source
+- Disable Source
+- Configure Columns
+- Configure Filters
+- Configure Icons
+- Configure Colors
+- Preview Marker
+- Manage Cluster Settings
+- Manage Radius Rules
+- Upload Excel
+- Upload CSV
+- Generate Reports
+- Export Reports
+- View Upload History
+- View Source Statistics
+- View Cluster Statistics
+
+## Data Import Module
+
+Create a dedicated Admin menu: **Import Data**.
+
+Administrator uploads:
+
+- Excel (.xlsx)
+- CSV (.csv)
+
+Administrator provides:
+
+- New Table Name (Required)
+- Source Name
+- Display Name
+- Description
+- Category
+- Default Icon
+- Marker Color
+
+System should:
+
+1. Validate file.
+2. Create a completely new SQLite table automatically.
+3. Detect data types automatically.
+4. Import all rows.
+5. Create indexes where applicable.
+6. Register the table automatically in Source Configuration.
+7. Redirect administrator to Column Mapping page.
+
+The imported table should immediately become configurable.
+
+No manual SQL should be required.
+
+If the table already exists:
+
+- Show validation error.
+- Do not overwrite unless administrator explicitly chooses Replace Existing.
+
+Keep upload history.
+
+History should contain:
+
+- Uploaded By
+- Upload Date
+- File Name
+- Source Name
+- Table Name
+- Total Records Imported
+- Upload Status
+- Error Message (if failed)
+
+Everything should be stored in database.
+
+## API Structure
+
+Create clean REST-style endpoints.
+
+Required endpoints:
+
+- `/api/sources/`
+- `/api/markers/`
+- `/api/filters/`
+- `/api/search/`
+- `/api/clusters/`
+- `/api/report/`
+- `/api/upload/`
+
+JSON responses.
+
+## Database Design
+
+Do NOT hardcode configuration.
+
+Design a proper metadata database.
+
+You are free to create as many configuration tables as required.
+
+Example tables (can be modified if a better design exists):
+
+- `source_master`
+- `source_column_mapping`
+- `source_filter_configuration`
+- `source_icon_configuration`
+- `source_cluster_configuration`
+- `source_upload_history`
+- `frontend_configuration`
+- `report_configuration`
+- `application_settings`
+- `user_preferences`
+
+The actual business/source data tables are NOT fixed.
+
+Those tables will be:
+
+- Existing SQLite tables
+- New tables created by Excel/CSV Import
+
+The administrator effectively designs the source database through uploads and registrations.
+
+Configuration tables must remain independent of source tables.
+
+Never modify uploaded source schemas unnecessarily.
+
+## Reporting Module
+
+Create a dedicated Reports section.
+
+Reports should be exportable to:
+
+- Excel
+- CSV
+- PDF
+
+Example reports:
+
+1. Cluster Report
+   - Cluster ID
+   - Radius Used
+   - Cluster Center Latitude
+   - Cluster Center Longitude
+   - Number of Projects
+   - Source-wise Count
+2. Expansion Opportunity Report
+   - Primary business report.
+   - Identify locations where multiple projects exist within the configured cluster radius (default 4 KM).
+   - This report is used to identify network expansion opportunities.
+3. Source Summary Report
+   - Projects by Source
+4. State-wise Report
+5. District-wise Report
+6. Radius Search Result Export
+   - Export current filtered map results.
+
+Reports should always respect:
+
+- Active filters
+- Selected sources
+- Cluster rules
+- Frontend permissions
+- Backend permissions
+
+No disabled sources should appear in reports.
+
+## Future Extensibility
+
+The architecture should already support future expansion:
+
+- Dashboard Analytics
+- Charts
+- PDF Reports
+- Scheduled Imports
+- Incremental Sync
+- Background Processing
+- Role Based Permissions
+
+## Final Deliverable
+
+Produce a complete, production-ready Django application with:
+
+- Metadata-driven configuration database
+- Admin-configurable cluster engine
+- Strict non-overlapping cluster algorithm
+- Excel/CSV import engine
+- Automatic table creation
+- Automatic source registration
+- Reporting module
+- Export to Excel, CSV and PDF
+- Dynamic source registration
+- Dynamic filter generation
+- Dynamic column mapping
+- Interactive Leaflet map
+- Radius search
+- Professional Bootstrap UI
+- Responsive design
+- Fast performance for very large SQLite databases
+- Well-structured code with comments and documentation
